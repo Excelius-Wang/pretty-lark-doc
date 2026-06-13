@@ -1,5 +1,7 @@
 # pretty-lark-doc
 
+English | [简体中文](README.zh-CN.md)
+
 A Claude Code / agent **skill** that turns "create a doc in Lark/Feishu" into a *well-written, trustworthy, cleanly-formatted* document — not just a syntactically-created one. It is a thin **quality layer** on top of the official `lark-doc` skill (shipped with [`lark-cli`](https://github.com/larksuite/cli)), which it drives for the mechanics.
 
 ## What it adds
