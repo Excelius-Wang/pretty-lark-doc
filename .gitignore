@@ -1,0 +1,10 @@
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# lark-cli writes logs into the working dir
+log/
+
+# transient artifacts
+*.png
+node_modules/
