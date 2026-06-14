@@ -1,46 +1,127 @@
 # pretty-lark-doc
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 [English](README.md) | 简体中文
 
-一个 Claude Code / agent **skill**,把"在飞书/Lark 里建个文档"变成产出**写得好、经得起推敲、排版克制**的文档——而不只是"语法上创建成功"。它是官方 `lark-doc` skill(随 [`lark-cli`](https://github.com/larksuite/cli) 提供)之上的一层**质量层**,底层机制仍交给 lark-doc。
+`pretty-lark-doc` 是一个 Claude Code / agent skill，用来创建写得清楚、内容可信、排版克制的 Lark/飞书云文档。它位于 [`lark-cli`](https://github.com/larksuite/cli) 官方 `lark-doc` skill 之上：`lark-doc` 负责文档创建和更新机制，本 skill 负责创建前后的质量把关。
 
-## 它在 lark-doc 之上加了什么
+当用户要求 agent 创建、起草、重写或发布面向读者的 Lark/飞书文档时，应优先使用本 skill，例如技术方案、周报、评审纪要、会议纪要、状态同步等。
 
-lark-doc 已经管了机制和基础排版规范(DocxXML 语法、结构、选块、配色、丰富度)。本 skill 只补它**没有强制**的那部分:
+## 为什么需要它
 
-- **写得紧(简单易懂)**—— 砍废话、每节先给结论、用具体数字、主动语态。
-- **排版克制(美观大方)**—— 一个 block 要比一句话更清楚才配出现;每屏 ≤ ~1 个高亮块;二维关系(分叉/并行/循环)才画图、线性步骤用列表。
-- **实质自检(可信)**—— 量化论断同口径且有出处、显式写出**非目标**、过一遍 reviewer 必问清单(失败/回滚安全、关键定义、可信备选、成功度量、边界条件)。
-- **校验渲染**—— 用 `--detail full` 把文档抓回来核对,因为 Markdown→飞书 的转换会静默丢样式(带变体选择符的 emoji 如 `⚠️` 会被打回 `💡`)。
+创建成功不等于文档有用。直接使用 `lark-doc` 可以正确创建块，但它不会强制检查文字是否简洁、结论是否可信、量化口径是否一致，也不会要求创建后拉回文档确认渲染结果。
 
-## 前置依赖
+本 skill 补上四件事：
 
-- [`lark-cli`](https://github.com/larksuite/cli) 及其 `lark-doc` skill,本 skill 在底层调用它:
-  ```bash
-  npx skills add larksuite/cli -y -g
-  ```
+- **写得更紧**：先给结论，砍掉废话，用具体数字，按受众选择深度。
+- **排版克制**：只有在更清楚时才使用高亮块、表格、分栏、图和颜色。
+- **实质审查**：检查量化口径、非目标、失败与回滚安全、备选方案、成功指标和边界条件。
+- **渲染校验**：创建后用 `--detail full` 拉回文档，确认样式没有丢失或劣化，再返回链接。
+
+## 前置要求
+
+- [`lark-cli`](https://github.com/larksuite/cli)
+- 已安装 `lark-cli` 官方 `lark-doc` skill
+- `lark-cli` 已完成认证
+
+如需安装 Lark skills：
+
+```bash
+npx skills add larksuite/cli -y -g
+```
+
+检查认证状态：
+
+```bash
+lark-cli auth status
+```
 
 ## 安装
 
-```bash
-# 从 GitHub
-npx skills add Excelius-Wang/pretty-lark-doc -g
+从 GitHub 安装：
 
-# 或直接 clone 到你的 skills 目录
+```bash
+npx skills add Excelius-Wang/pretty-lark-doc -g
+```
+
+或直接 clone 到 skills 目录：
+
+```bash
 git clone https://github.com/Excelius-Wang/pretty-lark-doc ~/.claude/skills/pretty-lark-doc
 ```
 
-## 用法
+## 快速开始
 
-让你的 agent 去写一篇飞书/Lark 文档即可——比如"把这次评审整理成飞书文档""给 X 写一篇飞书设计文档"。skill 会走:**框定 → 用 DocxXML 起草 → 评审(先实质、后紧凑)→ 创建 → 校验渲染**,最后返回 `doc_url`。
+让 agent 创建一篇 Lark/飞书文档：
 
-## 目录结构
+```text
+Create a Lark design doc for the new billing retry workflow.
+```
+
+```text
+把这次评审整理成飞书文档。
+```
+
+agent 应先使用本 skill，再真正创建文档。它会框定文档目标、使用 DocxXML 起草、审查内容、通过 `lark-doc` 创建文档、校验渲染结果，最后返回 `doc_url`。
+
+## 工作流
+
+1. **框定文档**：确认文档类型、读者，以及读者需要知道或决定什么。
+2. **选择模板**：匹配时优先从 `assets/templates/` 开始。
+3. **使用 DocxXML 起草**：不要先写 Markdown 再转换，否则丰富块容易丢表达能力。
+4. **创建前审查**：先检查内容可信度，再压缩文字。
+5. **创建文档**：使用 `lark-cli docs +create --content - < body.xml`。
+6. **校验渲染**：使用 `lark-cli docs +fetch --doc "<id>" --doc-format xml --detail full`。
+7. **定点修复**：用 `docs +update` 修复劣化的块、颜色或文字。
+
+## 模板
+
+| 模板 | 适用场景 |
+| --- | --- |
+| `assets/templates/tech-design.md` | 技术方案、RFC、实现计划 |
+| `assets/templates/weekly-report.md` | 团队或项目周报 |
+| `assets/templates/review-notes.md` | 评审纪要、会议纪要、决策记录 |
+
+模板是 DocxXML 骨架。使用时应按实际内容改写，并在发布前删除写作提示注释。
+
+## 仓库结构
 
 | 路径 | 用途 |
 | --- | --- |
-| `SKILL.md` | 工作流 + 写作 / 克制 / 实质三层原则 + 自检清单。 |
-| `references/feishu-markdown.md` | DocxXML 选块语法速查(callout / grid / 白板 / 表格 / 配色)+ 转换坑。 |
-| `assets/templates/` | 技术方案 / 周报 / 评审纪要的 DocxXML 骨架。 |
+| `SKILL.md` | skill 入口、工作流、质量原则和自检清单 |
+| `references/feishu-markdown.md` | 实用 DocxXML 块语法和转换注意事项 |
+| `assets/templates/` | 可复用的 DocxXML 文档骨架 |
+| `README.md` | 英文 README |
+
+## 维护说明
+
+- `SKILL.md` 是 agent 行为的事实来源。
+- 修改安装方式、工作流或适用场景时，同步更新中英文 README。
+- 优先保留小而实用的示例；权威 DocxXML 语法由已安装的 `lark-doc` skill 维护。
+- 除非 skill 真的需要可执行代码，否则不要增加本地构建步骤。
+
+## 常见问题
+
+**创建出来的文档看起来像普通 Markdown。**
+
+大概率跳过了 DocxXML。需要高亮块、分栏、彩色文字、彩色表头、复选框或白板时，应直接用 XML 起草。
+
+**拉回文档时看不到颜色。**
+
+使用 `--detail full`。默认的 simple detail 不会回显颜色属性，即使颜色已经保存在文档里。
+
+**警告 emoji 被替换成默认高亮块图标。**
+
+避免使用带 variation selector 的 emoji，例如 `⚠️`。可使用 `🚨`、`✅`、`🔴`、`❗`、`⛔`。
+
+**文档太长，一次创建失败。**
+
+先创建包含标题和章节的骨架，再通过 `docs +update --command block_insert_after` 分段插入内容。
+
+## 贡献
+
+欢迎提交 issue 和 pull request。涉及说明文档的改动，请在相关时同步更新英文和简体中文版本，并确保示例与 `SKILL.md` 一致。
 
 ## License
 

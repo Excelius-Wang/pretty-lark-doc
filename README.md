@@ -1,46 +1,127 @@
 # pretty-lark-doc
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 English | [简体中文](README.zh-CN.md)
 
-A Claude Code / agent **skill** that turns "create a doc in Lark/Feishu" into a *well-written, trustworthy, cleanly-formatted* document — not just a syntactically-created one. It is a thin **quality layer** on top of the official `lark-doc` skill (shipped with [`lark-cli`](https://github.com/larksuite/cli)), which it drives for the mechanics.
+`pretty-lark-doc` is a Claude Code / agent skill for creating Lark/Feishu cloud documents that are clear, trustworthy, and cleanly formatted. It sits on top of the official `lark-doc` skill from [`lark-cli`](https://github.com/larksuite/cli): `lark-doc` handles the document mechanics, while this skill adds the authoring quality gate.
 
-## What it adds
+Use this skill when the user asks an agent to create, draft, rewrite, or publish a user-facing Lark/Feishu document, such as a design doc, weekly report, review notes, meeting summary, or status update.
 
-`lark-doc` already owns the mechanics and a baseline style guide (DocxXML syntax, structure, block choice, color, richness). This skill adds the delta that guide does **not** enforce:
+## Why this exists
 
-- **Write it tight** (简单易懂) — cut filler, lead every section with its point, concrete numbers, active voice.
-- **Format with restraint** (美观大方) — a block must be clearer than a sentence to earn its place; ≤ ~1 callout per screen; diagram 2-D relationships, list 1-D ones.
-- **Pressure-test the substance** (可信) — same-apples claims, an explicit 非目标, and a reviewer must-ask list (failure/rollback safety, definitions, credible alternatives, success metric, edge cases).
-- **Verify the rendering** — fetch the doc back with `--detail full`, because Markdown→Feishu conversion can silently drop styling (and variation-selector emoji like `⚠️` revert to `💡`).
+Creating a document is not the same as producing a useful document. Raw `lark-doc` can create blocks correctly, but it does not force the agent to check whether the writing is concise, the claims are defensible, or the rendered document still looks right after conversion.
+
+This skill adds four things:
+
+- **Tighter writing**: lead with the conclusion, cut filler, use concrete numbers, and match depth to the audience.
+- **Restrained formatting**: use callouts, tables, grids, diagrams, and colors only when they make the document clearer.
+- **Substance review**: check same-apples claims, explicit non-goals, failure and rollback safety, alternatives, success metrics, and edge cases.
+- **Rendering verification**: fetch the created document back with `--detail full` and fix dropped or degraded formatting before returning the link.
 
 ## Requirements
 
-- [`lark-cli`](https://github.com/larksuite/cli) with its `lark-doc` skill. This skill calls it underneath:
-  ```bash
-  npx skills add larksuite/cli -y -g
-  ```
+- [`lark-cli`](https://github.com/larksuite/cli)
+- The official `lark-doc` skill installed for `lark-cli`
+- A valid `lark-cli` auth session
 
-## Install
+Install the Lark skills if needed:
 
 ```bash
-# from GitHub
-npx skills add Excelius-Wang/pretty-lark-doc -g
+npx skills add larksuite/cli -y -g
+```
 
-# or clone straight into your skills dir
+Check auth:
+
+```bash
+lark-cli auth status
+```
+
+## Installation
+
+Install from GitHub:
+
+```bash
+npx skills add Excelius-Wang/pretty-lark-doc -g
+```
+
+Or clone it into your skills directory:
+
+```bash
 git clone https://github.com/Excelius-Wang/pretty-lark-doc ~/.claude/skills/pretty-lark-doc
 ```
 
-## Usage
+## Quick Start
 
-Ask your agent to author a Lark/Feishu doc — e.g. "把这次评审整理成飞书文档" or "create a Lark design doc for X". The skill runs: **frame → draft as DocxXML → review (substance, then tighten) → create → verify rendering**, then returns the `doc_url`.
+Ask your agent to author a Lark/Feishu document:
 
-## Layout
+```text
+Create a Lark design doc for the new billing retry workflow.
+```
+
+```text
+把这次评审整理成飞书文档。
+```
+
+The agent should use this skill before creating the document. It will frame the document, draft DocxXML, review the content, create the document through `lark-doc`, verify the rendered result, and return the final `doc_url`.
+
+## Workflow
+
+1. **Frame the document**: identify the document type, audience, and decision or outcome the reader needs.
+2. **Choose a template**: start from `assets/templates/` when the type matches.
+3. **Draft in DocxXML**: use XML instead of Markdown so rich Feishu blocks survive conversion.
+4. **Review before creating**: tighten the writing and pressure-test the substance.
+5. **Create the document**: use `lark-cli docs +create --content - < body.xml`.
+6. **Verify rendering**: fetch with `lark-cli docs +fetch --doc "<id>" --doc-format xml --detail full`.
+7. **Fix targeted issues**: use `docs +update` for degraded blocks, colors, or text.
+
+## Templates
+
+| Template | Use for |
+| --- | --- |
+| `assets/templates/tech-design.md` | Technical design docs, RFCs, implementation plans |
+| `assets/templates/weekly-report.md` | Team or project weekly reports |
+| `assets/templates/review-notes.md` | Review notes, meeting notes, decision records |
+
+Templates are DocxXML skeletons. Adapt them to the specific document and remove authoring comments before publishing.
+
+## Repository Layout
 
 | Path | Purpose |
 | --- | --- |
-| `SKILL.md` | Workflow + the writing / restraint / substance principles + self-check. |
-| `references/feishu-markdown.md` | DocxXML block-syntax cheatsheet (callout / grid / whiteboard / table / colors) + conversion caveats. |
-| `assets/templates/` | DocxXML skeletons for 技术方案 / 周报 / 评审纪要. |
+| `SKILL.md` | Skill entry point, workflow, quality principles, and self-check |
+| `references/feishu-markdown.md` | Practical DocxXML block reference and conversion caveats |
+| `assets/templates/` | Reusable DocxXML document skeletons |
+| `README.zh-CN.md` | Simplified Chinese README |
+
+## Notes for Maintainers
+
+- Keep `SKILL.md` as the source of truth for agent behavior.
+- Keep both README files aligned when changing installation, workflow, or supported use cases.
+- Prefer small, practical examples over broad documentation. The authoritative DocxXML syntax belongs to the installed `lark-doc` skill.
+- Do not add local build steps unless the skill actually needs executable code.
+
+## Troubleshooting
+
+**The agent created a plain Markdown-looking document.**
+
+It probably skipped DocxXML. Draft in XML when the document needs callouts, grids, colored text, colored table headers, checkboxes, or whiteboards.
+
+**Colors appear missing after fetch.**
+
+Fetch with `--detail full`. Simple detail mode does not echo color attributes even when they persist in the document.
+
+**A warning emoji changed to the default callout icon.**
+
+Avoid variation-selector emoji such as `⚠️`. Use plain emoji such as `🚨`, `✅`, `🔴`, `❗`, or `⛔`.
+
+**The document is too large to create in one command.**
+
+Create a skeleton first, then insert sections with `docs +update --command block_insert_after`.
+
+## Contributing
+
+Issues and pull requests are welcome. For content changes, please update both English and Simplified Chinese documentation when relevant, and keep examples consistent with `SKILL.md`.
 
 ## License
 
