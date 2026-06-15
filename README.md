@@ -79,7 +79,9 @@ The agent should use this skill before creating the document. It will frame the 
 
 | Template | Use for |
 | --- | --- |
-| `assets/templates/tech-design.md` | Technical design docs, RFCs, implementation plans |
+| `assets/templates/tech-design.md` | General engineering design docs, RFCs, implementation plans |
+| `assets/templates/ml-design.md` | Algorithm / ML design docs (recall, ranking, recommendation, regression, generation); metrics chosen by task family |
+| `assets/templates/classification-design.md` | ML design docs judged by **P / R / F1** (binary classification, detection, risk control; multi-class → use `ml-design`); adds confusion matrix, PR/ROC-AUC, threshold selection, error analysis |
 | `assets/templates/weekly-report.md` | Team or project weekly reports |
 | `assets/templates/review-notes.md` | Review notes, meeting notes, decision records |
 
@@ -90,7 +92,7 @@ Templates are DocxXML skeletons. Adapt them to the specific document and remove 
 | Path | Purpose |
 | --- | --- |
 | `SKILL.md` | Skill entry point, workflow, quality principles, and self-check |
-| `references/feishu-markdown.md` | Practical DocxXML block reference and conversion caveats |
+| `references/feishu-docxxml.md` | Practical DocxXML block reference and conversion caveats |
 | `assets/templates/` | Reusable DocxXML document skeletons |
 | `README.zh-CN.md` | Simplified Chinese README |
 
