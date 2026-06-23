@@ -97,7 +97,7 @@ These are what make a doc look *designed*. None of them exist in Markdown.
 
 ## 3. Diagrams via whiteboard (verified)
 
-Embed an **editable** Feishu whiteboard with a `<whiteboard>` tag — *not* a ```` ```mermaid ```` fence:
+**Default rule:** flowcharts, sequence diagrams, architecture diagrams, state machines, and hierarchy diagrams should be editable Feishu whiteboards. Embed them with a `<whiteboard>` tag — *not* a screenshot, plain image, or ```` ```mermaid ```` fence:
 
 ```xml
 <whiteboard type="mermaid">
@@ -109,10 +109,10 @@ flowchart LR
 ```
 
 - `type`: `mermaid` | `plantuml` | `svg` | `blank`.
-- **Mermaid** covers flow / sequence / class / pie / gantt / mindmap. For custom or other charts use `type="svg"` with a fully self-contained `<svg viewBox="…">…</svg>` (no external refs; avoid `<filter>`/`<radialGradient>`/`<clipPath>` — the board can't render them).
-- Inside mermaid, **avoid a literal `<`** (it starts an XML tag) — use directed edges `-->` only; `-->` is valid as text.
-- Prefer the whiteboard over a screenshot of a diagram. Confirm it rendered by exporting an image:
-  `lark-cli whiteboard +query --whiteboard-token "<token>" --output_as image --output ./preview.png` (the output path must be **relative to the current directory**).
+- **Mermaid** covers flow / sequence / state (`stateDiagram-v2`) / class / pie / gantt / mindmap. Beyond the basics, these also render (verified): `stateDiagram-v2` `[*]` start/end + self-loops, and sequenceDiagram `alt`/`else` frames. For custom or other charts use `type="svg"` with a fully self-contained `<svg viewBox="…">…</svg>` (no external refs; avoid `<filter>`/`<radialGradient>`/`<clipPath>` — the board can't render them).
+- Inside mermaid, **avoid a literal `<`** (it starts an XML tag) — use directed edges `-->` only; `-->` is valid as text. Use plain rectangles `[...]`, **not** the cylinder `[(...)]` — Feishu normalizes it to a rectangle with literal parentheses. Full-width `（）` inside labels is safe (not a mermaid metacharacter).
+- Prefer the whiteboard over a screenshot of a diagram. Use images only for non-diagram visuals or cases a whiteboard cannot express. Confirm it rendered by exporting an image:
+  `lark-cli docs +media-download --type whiteboard --token "<token>" --output preview.png` — the whiteboard `token` is the `token="…"` attribute on the `<whiteboard>` tag in a `--detail full` fetch (also the `block_token` in the `+create` response); the output path is **relative to the current directory**.
 
 ## 4. Content → block map
 
