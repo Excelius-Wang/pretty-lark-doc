@@ -17,12 +17,12 @@ Two steps are non-negotiable: the **review pass (4)** — formatting can't rescu
 
 1. **Prerequisites.** `lark-doc` installed and `lark-cli auth status` OK. (A bot-created doc needs the user granted access afterward.)
 2. **Frame.** Pin down **type** (→ a template in `assets/templates/`), **audience** (engineers / cross-functional / leadership — sets depth and jargon), and **goal** (what the reader should know or decide).
-3. **Draft as DocxXML.** XML, not Markdown — callouts, grids, colored text, and checkboxes don't exist in Markdown and silently degrade if you draft in it. Apply the principles below; for block syntax read `references/feishu-docxxml.md`, and follow `lark-doc`'s style guide for structure/color/richness (`lark-cli skills read lark-doc references/style/lark-doc-style.md`).
+3. **Draft as DocxXML.** XML, not Markdown — callouts, grids, colored text, and checkboxes don't exist in Markdown and silently degrade if you draft in it. **Diagram rule:** flowcharts, sequence diagrams, architecture diagrams, state machines, and hierarchy diagrams should default to editable Feishu whiteboards (`<whiteboard type="mermaid">`), not screenshots, Mermaid code fences, or plain images. Use images only for non-diagram visuals or cases a whiteboard cannot express. Apply the principles below; for block syntax read `references/feishu-docxxml.md`, and follow `lark-doc`'s style guide for structure/color/richness (`lark-cli skills read lark-doc references/style/lark-doc-style.md`).
 4. **Review before creating — substance first (do not skip).**
    - **(a) Substance** — claims are *same-apples* and sourced; scope/非目标 is stated, not smuggled into a qualifier; reviewer must-asks (failure & rollback safety, key definitions, credible alternatives, success metric, edge conditions) are answered or honestly deferred.
    - **(b) Tighten** — cut ~20% filler; each section leads with its point; concrete numbers; demote any block not clearer than a sentence; emphasis budget ≤ ~1 callout per screen.
    - **(c) Flow & feel** — skeleton is top-down / MECE; headings read as a talking-headline logic chain; the opening hooks (SCQA); texture varies (no isolated table walls).
-5. **Create.** *Short docs:* `lark-cli docs +create --content - < body.xml` — XML is the default; the title comes from `<title>` (there is **no** `--title`/`--markdown` flag, and don't repeat the title as a heading); use stdin because `--content @file` only takes a cwd-relative path. *Long docs:* create a **skeleton first** (`<title>` + headings + short placeholders), then fill each section via `docs +update --command block_insert_after` — one oversized `--content` hits param limits and is hard to debug (defer to `lark-doc` for the exact append mechanics). Diagrams → `<whiteboard type="mermaid">`; images/attachments → `lark-cli docs +media-insert`.
+5. **Create.** *Short docs:* `lark-cli docs +create --content - < body.xml` — XML is the default; the title comes from `<title>` (there is **no** `--title`/`--markdown` flag, and don't repeat the title as a heading); use stdin because `--content @file` only takes a cwd-relative path. *Long docs:* create a **skeleton first** (`<title>` + headings + short placeholders), then fill each section via `docs +update --command block_insert_after` — one oversized `--content` hits param limits and is hard to debug (defer to `lark-doc` for the exact append mechanics). Diagrams must use `<whiteboard type="mermaid">` by default; images/attachments → `lark-cli docs +media-insert`.
 6. **Verify (required).** Fetch back: `lark-cli docs +fetch --doc "<id>" --doc-format xml --detail full`. Confirm structure *and* styling survived. **Use `--detail full`** — `simple` doesn't echo colors, so they look "missing" when they're fine (they persist as `rgb(...)`). The one real degradation: variation-selector emoji (`⚠️`→`💡`) — use plain ones (`✅ 🚨 🔴 ❗ ⛔`). Fix with a targeted `docs +update --command str_replace|block_replace`. Then return the `doc_url`, noting any block you adjusted.
 
 ## What this skill adds (the delta over `lark-doc`)
@@ -45,7 +45,7 @@ Decide the skeleton before drafting. A human understands top-down and from known
 
 ### 3. Format with restraint *and* rhythm — so 美观 is real, not noise and not a wall of tables
 - **Default to clean prose; a block must be clearer than a sentence to earn its place.** Over-formatting reads as badly as a wall of text.
-- **Vary the texture (visual rhythm):** alternate prose / table / diagram / whitespace; **never stack two tables with no sentence between them** — one "so what" line before each table. 图 > 表 > 文 for relationships (flow / hierarchy / architecture → whiteboard); table for parallel comparison; prose for a chain of reasoning. Don't pad to hit a richness number.
+- **Vary the texture (visual rhythm):** alternate prose / table / diagram / whitespace; **never stack two tables with no sentence between them** — one "so what" line before each table. 图 > 表 > 文 for relationships, and diagram-like content defaults to Feishu whiteboard (`<whiteboard type="mermaid">`) so it stays editable; table for parallel comparison; prose for a chain of reasoning. Don't pad to hit a richness number.
 - **Emphasis is a budget** — ≤ ~1 callout per screen; ≤ 2–3 semantic colors across the whole doc (consistent mapping); bold key terms, not sentences. The first screen (the TL;DR callout) sets the impression — keep it complete and clean.
 
 ### 4. Pressure-test the substance — so it's trustworthy, not just readable
@@ -56,12 +56,13 @@ The smoother it reads, the less a reader questions it. So stress the content:
 
 ## Templates & syntax
 - `assets/templates/` — DocxXML skeletons. Read the matching one, adapt it, don't paste verbatim:
-  - `tech-design.md` — general engineering design / RFC (metrics = latency / cost / error rate …).
+  - `tech-design.md` — general engineering design / RFC, **decision-oriented** (alternatives, success metrics, rollout, decision points; metrics = latency / cost / error rate …). Use when the doc must get a *do-it-or-not / which-approach* decision reviewed.
+  - `module-design.md` — detailed design (LLD) of **one already-decided module / component**, **construction-oriented** for implementers & maintainers (responsibilities & boundary, API contract, data model, internal flow / state machine, failure & degradation, performance, observability, tests, compatibility). Use when the *what / whether* is settled and the doc is about *how it's built*.
   - `ml-design.md` — algorithm / ML design (data, offline metrics **by task family**, online A/B, reproducibility, resources). Use for 召回 / 排序 / 推荐 / 回归 / 生成.
   - `classification-design.md` — ML design where the core metrics are **P / R / F1** (binary classification / detection / 风控; multi-class → use `ml-design`). Adds confusion matrix, PR/ROC-AUC, threshold/operating point, error analysis.
   - `weekly-report.md` — team / project weekly report.
   - `review-notes.md` — review / meeting notes, decision records.
-  - **Routing:** pure engineering → `tech-design`; ML in general → `ml-design`; ML judged by P/R/F1 → `classification-design`.
+  - **Routing:** a decision to review (do-it-or-not / which approach / RFC) → `tech-design`; the build-detail of one already-decided module → `module-design`; ML in general → `ml-design`; ML judged by P/R/F1 → `classification-design`.
 - `references/feishu-docxxml.md` — block syntax (callout / grid / whiteboard / table / colors), the content→block map, escaping, and conversion caveats.
 
 ## Self-check (the delta — `lark-doc`'s self-check covers structure/richness)

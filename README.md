@@ -69,7 +69,7 @@ The agent should use this skill before creating the document. It will frame the 
 
 1. **Frame the document**: identify the document type, audience, and decision or outcome the reader needs.
 2. **Choose a template**: start from `assets/templates/` when the type matches.
-3. **Draft in DocxXML**: use XML instead of Markdown so rich Feishu blocks survive conversion.
+3. **Draft in DocxXML**: use XML instead of Markdown so rich Feishu blocks survive conversion. Flowcharts, sequence diagrams, architecture diagrams, state machines, and hierarchy diagrams should default to editable Feishu whiteboards (`<whiteboard type="mermaid">`), not screenshots or Mermaid code fences.
 4. **Review before creating**: tighten the writing and pressure-test the substance.
 5. **Create the document**: use `lark-cli docs +create --content - < body.xml`.
 6. **Verify rendering**: fetch with `lark-cli docs +fetch --doc "<id>" --doc-format xml --detail full`.
@@ -79,7 +79,8 @@ The agent should use this skill before creating the document. It will frame the 
 
 | Template | Use for |
 | --- | --- |
-| `assets/templates/tech-design.md` | General engineering design docs, RFCs, implementation plans |
+| `assets/templates/tech-design.md` | General engineering design docs, RFCs, implementation plans (decision-oriented: alternatives, success metrics, rollout, decision points) |
+| `assets/templates/module-design.md` | Detailed design (LLD) of a single module/component for implementers (construction-oriented): responsibilities & boundary, API contract, data model, internal flow, failure & degradation, observability, tests |
 | `assets/templates/ml-design.md` | Algorithm / ML design docs (recall, ranking, recommendation, regression, generation); metrics chosen by task family |
 | `assets/templates/classification-design.md` | ML design docs judged by **P / R / F1** (binary classification, detection, risk control; multi-class → use `ml-design`); adds confusion matrix, PR/ROC-AUC, threshold selection, error analysis |
 | `assets/templates/weekly-report.md` | Team or project weekly reports |
@@ -108,6 +109,10 @@ Templates are DocxXML skeletons. Adapt them to the specific document and remove 
 **The agent created a plain Markdown-looking document.**
 
 It probably skipped DocxXML. Draft in XML when the document needs callouts, grids, colored text, colored table headers, checkboxes, or whiteboards.
+
+**A diagram was inserted as an image or code block.**
+
+Use a Feishu whiteboard block by default: `<whiteboard type="mermaid">`. Keep plain images for non-diagram visuals or diagrams that cannot be represented as editable whiteboards.
 
 **Colors appear missing after fetch.**
 
