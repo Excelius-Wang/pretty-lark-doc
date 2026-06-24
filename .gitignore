@@ -2,6 +2,9 @@
 .DS_Store
 *.swp
 
+# local IDE maintenance rules — not for the public repo
+.cursor/
+
 # lark-cli writes logs into the working dir
 log/
 
