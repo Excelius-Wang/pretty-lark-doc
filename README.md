@@ -88,6 +88,8 @@ The agent should use this skill before creating the document. It will frame the 
 
 Templates are DocxXML skeletons. Adapt them to the specific document and remove authoring comments before publishing.
 
+For a fully worked, filled-in example (not a skeleton), see `assets/examples/module-design.md` — a real module-design document with three rendered whiteboards.
+
 ## Repository Layout
 
 | Path | Purpose |
@@ -95,6 +97,7 @@ Templates are DocxXML skeletons. Adapt them to the specific document and remove 
 | `SKILL.md` | Skill entry point, workflow, quality principles, and self-check |
 | `references/feishu-docxxml.md` | Practical DocxXML block reference and conversion caveats |
 | `assets/templates/` | Reusable DocxXML document skeletons |
+| `assets/examples/` | Fully worked example documents (filled in, for reference) |
 | `README.zh-CN.md` | Simplified Chinese README |
 
 ## Notes for Maintainers
@@ -125,6 +128,10 @@ Avoid variation-selector emoji such as `⚠️`. Use plain emoji such as `🚨`,
 **The document is too large to create in one command.**
 
 Create a skeleton first, then insert sections with `docs +update --command block_insert_after`.
+
+**Creating a document fails with `20069` or permission denied.**
+
+Creating needs a **user** identity whose scope includes `docx:document:create`, and the Feishu app must be enabled on the open platform — otherwise both user and bot get `20069`. Check that `lark-cli auth status --json` shows `user.status` = `ready`.
 
 ## Contributing
 

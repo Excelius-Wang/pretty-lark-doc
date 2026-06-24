@@ -111,8 +111,8 @@ flowchart LR
 - `type`: `mermaid` | `plantuml` | `svg` | `blank`.
 - **Mermaid** covers flow / sequence / state (`stateDiagram-v2`) / class / pie / gantt / mindmap. Beyond the basics, these also render (verified): `stateDiagram-v2` `[*]` start/end + self-loops, and sequenceDiagram `alt`/`else` frames. For custom or other charts use `type="svg"` with a fully self-contained `<svg viewBox="…">…</svg>` (no external refs; avoid `<filter>`/`<radialGradient>`/`<clipPath>` — the board can't render them).
 - Inside mermaid, **avoid a literal `<`** (it starts an XML tag) — use directed edges `-->` only; `-->` is valid as text. Use plain rectangles `[...]`, **not** the cylinder `[(...)]` — Feishu normalizes it to a rectangle with literal parentheses. Full-width `（）` inside labels is safe (not a mermaid metacharacter).
-- Prefer the whiteboard over a screenshot of a diagram. Use images only for non-diagram visuals or cases a whiteboard cannot express. Confirm it rendered by exporting an image:
-  `lark-cli docs +media-download --type whiteboard --token "<token>" --output preview.png` — the whiteboard `token` is the `token="…"` attribute on the `<whiteboard>` tag in a `--detail full` fetch (also the `block_token` in the `+create` response); the output path is **relative to the current directory**.
+- Prefer the whiteboard over a screenshot of a diagram. Use images only for non-diagram visuals or cases a whiteboard cannot express. **Confirm it actually rendered by exporting the image and looking at it** — mermaid surviving in the fetched XML does *not* mean the diagram is correct:
+  `lark-cli docs +media-download --type whiteboard --token "<token>" --output preview.png` — the whiteboard `token` is the `token="…"` attribute on the `<whiteboard>` tag in a `--detail full` fetch (also the `block_token` in the `+create` response); the output path is **relative to the current directory**. A board that came out wrong (blank from a syntax error, or literal parens from a `[(...)]`) is fixed **in place** — no full re-create — with `lark-cli docs +whiteboard-update --whiteboard-token "<token>" --input_format mermaid --overwrite --source - < fixed.mmd`.
 
 ## 4. Content → block map
 
@@ -136,4 +136,5 @@ flowchart LR
 - **Verify styling with `--detail full`.** Colors persist but only show under `--detail full` (not `simple`) — they come back as `rgb(...)`. The one thing that truly degrades: variation-selector emoji (`⚠️`→`💡`); use plain single-codepoint emoji (`✅ 🚨 🔴 ❗`). Fetch back and check (step 6).
 - **Long content → stdin**, not a giant inline string: `--content - < body.xml`. The `@file` form only accepts a path **relative to the current directory**. There are **no** `--title` / `--markdown` flags.
 - **`docs +update` is block/pattern-based**: `str_replace` / `block_replace` / `block_insert_after` / `block_copy_insert_after` / `block_move_after` / `append` / `overwrite` (no `--title`).
+- **Whiteboard content updates separately** — `docs +whiteboard-update --whiteboard-token <t> --input_format mermaid --overwrite --source -` (not `docs +update`); verify by exporting `docs +media-download --type whiteboard --token <t> --output x.png`.
 - **Wiki vs docx tokens differ.** Resolve a `feishu.cn/wiki/...` URL to a `docx` token before fetch/update operations that need one.
